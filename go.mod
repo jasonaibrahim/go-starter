@@ -1,4 +1,4 @@
-module github.com/ozone/ozone-platform
+module github.com/jasonaibrahim/ozone-platform
 
 go 1.12
 

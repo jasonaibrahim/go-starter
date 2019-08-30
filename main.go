@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/ozone/ozone-platform/app"
-	"github.com/ozone/ozone-platform/server"
+	"github.com/jasonaibrahim/ozone-platform/app"
+	"github.com/jasonaibrahim/ozone-platform/server"
 	"log"
 )
 

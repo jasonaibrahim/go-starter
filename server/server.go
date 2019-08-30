@@ -2,9 +2,8 @@ package server
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/ozone/ozone-platform/handlers"
+	"github.com/jasonaibrahim/ozone-platform/app/handlers"
 	"log"
-	"os"
 )
 
 func Start() {
@@ -16,7 +15,5 @@ func Start() {
 
 	if err != nil {
 		log.Fatal(err)
-	} else {
-		log.Printf("Ozone Platform Server listening on %s", os.Getenv("PORT"))
 	}
 }

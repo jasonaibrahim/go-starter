@@ -20,7 +20,8 @@ func Init() error {
 		return err
 	}
 
-	Store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
+	sessionKey := os.Getenv("SESSION_KEY")
+	Store = sessions.NewCookieStore([]byte(sessionKey))
 	gob.Register(map[string]interface{}{})
 
 	return nil
