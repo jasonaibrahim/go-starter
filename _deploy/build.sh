@@ -3,6 +3,6 @@
 cd "$(dirname "$0")/../" || exit
 
 go test ./test/
-go build -o main .
+go build -o main ./src/
 
-docker build -t ozone-platform .
+docker build -t go-starter .
