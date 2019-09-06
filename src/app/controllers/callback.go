@@ -1,12 +1,11 @@
-package routes
+package controllers
 
 import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/sessions"
-	app2 "github.com/jasonaibrahim/go-starter/src/app"
-	auth2 "github.com/jasonaibrahim/go-starter/src/app/auth"
-	errors2 "github.com/jasonaibrahim/go-starter/src/app/errors"
+	"github.com/jasonaibrahim/go-starter/src/app"
+	"github.com/jasonaibrahim/go-starter/src/config/auth"
 	"golang.org/x/oauth2"
 	"net/http"
 	"os"
@@ -16,14 +15,14 @@ import (
 
 func getSession(request *http.Request) (*sessions.Session, error) {
 	sessionName := os.Getenv("SESSION_NAME")
-	return app2.Store.Get(request, sessionName)
+	return app.Store.Get(request, sessionName)
 }
 
 func isStateInvalid(request *http.Request, session *sessions.Session) bool {
 	return request.URL.Query().Get("state") != session.Values["state"]
 }
 
-func getAccessToken(request *http.Request, authenticator *auth2.Authenticator) (*oauth2.Token, error) {
+func getAccessToken(request *http.Request, authenticator *auth.Authenticator) (*oauth2.Token, error) {
 	code := request.URL.Query().Get("code")
 	return authenticator.Config.Exchange(context.TODO(), code)
 }
@@ -34,7 +33,7 @@ func getProfile(idToken *oidc.IDToken) (map[string]interface{}, error) {
 	return profile, err
 }
 
-func getIdToken(authenticator auth2.Authenticator, idToken string) (*oidc.IDToken, error) {
+func getIdToken(authenticator auth.Authenticator, idToken string) (*oidc.IDToken, error) {
 	clientId := os.Getenv("AUTH0_CLIENT_ID")
 	oidcConfig := &oidc.Config{ClientID: clientId}
 	return authenticator.Provider.Verifier(oidcConfig).Verify(context.TODO(), idToken)
@@ -43,18 +42,18 @@ func getIdToken(authenticator auth2.Authenticator, idToken string) (*oidc.IDToke
 func OAuthCallback(c *gin.Context) {
 	session, err := getSession(c.Request)
 	if err != nil {
-		c.JSON(errors2.ErrorMessage(errors2.UnknownError, err))
+		c.HTML(RenderErrorTemplate(UnknownError, err))
 		return
 	}
 
 	if isStateInvalid(c.Request, session) {
-		c.JSON(errors2.ErrorMessage(errors2.InvalidStateError, nil))
+		c.HTML(RenderErrorTemplate(InvalidStateError, nil))
 		return
 	}
 
-	authenticator, err := auth2.NewAuthenticator()
+	authenticator, err := auth.NewAuthenticator()
 	if err != nil {
-		c.JSON(errors2.ErrorMessage(errors2.UnknownError, err))
+		c.HTML(RenderErrorTemplate(UnknownError, err))
 		return
 	}
 
@@ -66,25 +65,25 @@ func OAuthCallback(c *gin.Context) {
 
 	rawIDToken, ok := token.Extra("id_token").(string)
 	if !ok {
-		c.JSON(errors2.ErrorMessage(errors2.IdTokenError, nil))
+		c.HTML(RenderErrorTemplate(IdTokenError, nil))
 		return
 	}
 
 	idToken, err := getIdToken(*authenticator, rawIDToken)
 	if err != nil {
-		c.JSON(errors2.ErrorMessage(errors2.IdTokenError, err))
+		c.HTML(RenderErrorTemplate(IdTokenError, err))
 		return
 	}
 
 	profile, err := getProfile(idToken)
 	if err != nil {
-		c.JSON(errors2.ErrorMessage(errors2.UnknownError, err))
+		c.HTML(RenderErrorTemplate(UnknownError, err))
 		return
 	}
 
 	err = updateSession(session, rawIDToken, token.AccessToken, profile, c.Request, c.Writer)
 	if err != nil {
-		c.JSON(errors2.ErrorMessage(errors2.UnknownError, err))
+		c.HTML(RenderErrorTemplate(UnknownError, err))
 		return
 	}
 
